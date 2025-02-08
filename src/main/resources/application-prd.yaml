@@ -34,3 +34,13 @@ server:
   undertow:
     io-threads: 200
     worker-threads: 250
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    filter: true
+  packages-to-scan: nl.gerimedica.assignment
+  paths-to-match: /api/**
