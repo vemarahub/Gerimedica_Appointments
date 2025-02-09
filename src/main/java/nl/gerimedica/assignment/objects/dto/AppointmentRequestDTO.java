@@ -10,8 +10,11 @@ import java.util.List;
 @Data
 public class AppointmentRequestDTO {
     @NotNull
+    private String patientName;
+    @NotNull
+    private String ssn;
+    @NotNull
     private List<String> reasons;
-
     @NotNull
     @FutureOrPresent
     private List<LocalDate> dates;

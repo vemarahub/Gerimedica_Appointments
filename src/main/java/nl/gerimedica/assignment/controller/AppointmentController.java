@@ -12,6 +12,7 @@ import nl.gerimedica.assignment.constants.AppointmentConstants;
 import nl.gerimedica.assignment.exceptions.AppointmentException;
 import nl.gerimedica.assignment.objects.dto.AppointmentRequestDTO;
 import nl.gerimedica.assignment.objects.dto.AppointmentResponseDTO;
+import nl.gerimedica.assignment.objects.dto.ErrorResponseDTO;
 import nl.gerimedica.assignment.objects.entities.Appointment;
 import nl.gerimedica.assignment.service.HospitalService;
 import org.slf4j.Logger;
@@ -43,6 +44,8 @@ public class AppointmentController {
     /**
      * Creates multiple appointments in bulk.
      * Example: {
+     * "patientName" : "John Doe",
+     * "ssn": "23454555",
      * "reasons": ["Checkup", "Follow-up", "X-Ray"],
      * "dates": ["2025-02-01", "2025-02-15", "2025-03-01"]
      * }
@@ -99,7 +102,7 @@ public class AppointmentController {
                     description = "Invalid keyword provided",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
                     )
             ),
             @ApiResponse(
@@ -107,7 +110,7 @@ public class AppointmentController {
                     description = "No appointments found",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
                     )
             )
     })
@@ -145,7 +148,7 @@ public class AppointmentController {
                     description = "Invalid SSN format",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
                     )
             ),
             @ApiResponse(
@@ -153,7 +156,7 @@ public class AppointmentController {
                     description = "No appointments found for the SSN",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
                     )
             )
     })
@@ -194,7 +197,7 @@ public class AppointmentController {
                     description = "Invalid SSN format",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
                     )
             ),
             @ApiResponse(
@@ -202,7 +205,7 @@ public class AppointmentController {
                     description = "No appointments found for the SSN",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponseDTO.class)
                     )
             )
     })

@@ -1,10 +1,12 @@
 package nl.gerimedica.assignment.objects.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.util.Objects;
 
 @Entity
+@Data
 public class Appointment {
 
     @Id
