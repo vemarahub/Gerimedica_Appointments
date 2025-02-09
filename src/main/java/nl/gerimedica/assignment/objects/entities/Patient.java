@@ -14,8 +14,9 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
     public String name;
+    @Column(unique = true)
     public String ssn;
-    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Appointment> appointments;
 
     public Patient() {

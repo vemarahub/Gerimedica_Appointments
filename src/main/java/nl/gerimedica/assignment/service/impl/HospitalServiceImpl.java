@@ -51,46 +51,83 @@ public class HospitalServiceImpl implements HospitalService {
     @Transactional
     public List<AppointmentResponseDTO> createBulkAppointments(AppointmentRequestDTO request) {
         logger.debug("Creating bulk appointments for request: {}", request);
-        List<Appointment> appointments = new ArrayList<>();
-        List<AppointmentResponseDTO> responseDTOs = new ArrayList<>();
+
+        // Validate the request
+        validateAppointmentRequest(request);
+
+        // Find or create the patient
+        Patient patient = findOrCreatePatient(request.getSsn(), request.getPatientName());
+
+        // Create appointments
+        List<Appointment> appointments = createAppointments(request, patient);
 
         try {
-            if (request == null || request.getReasons().isEmpty() || request.getDates().isEmpty()) {
-                logger.warn("Invalid request: Missing data for appointment creation.");
-                throw new IllegalArgumentException("Request data is incomplete");
-            }
-
-            Patient patient = findPatientBySSN(request.getSsn());
-            if (patient == null) {
-                logger.info("Creating new patient with SSN: {}", request.getSsn());
-                savePatient(new Patient(request.getPatientName(), request.getSsn()));
-            } else {
-                logger.info("Existing patient found, SSN: {}", request.getSsn());
-            }
-
-            int loopSize = Math.min(request.getReasons().size(), request.getDates().size());
-            appointments = IntStream.range(0, loopSize)
-                    .mapToObj(i -> new Appointment(request.getReasons().get(i), request.getDates().get(i).format(DATE_FORMATTER), patient))
-                    .collect(Collectors.toList());
-
+            // Save all appointments
             appointmentRepository.saveAll(appointments);
+            logger.info("Successfully created {} appointments for patient with SSN: {}", appointments.size(), patient.getSsn());
 
-            appointments.forEach(appointment ->
-                    logger.info("Created appointment for reason: {} [Date: {}]",
-                            appointment.getReason(), appointment.getDate()));
-
+            // Record usage
             HospitalUtils.recordUsage("Bulk create appointments");
-            responseDTOs = AppointmentMapper.toDtoList(appointments);
 
-
-        } catch (IllegalArgumentException e) {
-            logger.error("Appointment creation failed due to invalid input: {}", e.getMessage());
+            // Map appointments to DTOs
+            return AppointmentMapper.toDtoList(appointments);
         } catch (Exception e) {
-            logger.error("Unexpected error during appointment creation: {}", e.getMessage(), e);
+            logger.error("Failed to create appointments for patient with SSN: {}", patient.getSsn(), e);
+            throw new AppointmentException("Failed to create appointments: " + e.getMessage());
         }
+    }
 
-        return responseDTOs;
+    /**
+     * Validates the appointment request.
+     *
+     * @param request The appointment request DTO
+     * @throws IllegalArgumentException if the request is invalid
+     */
+    private void validateAppointmentRequest(AppointmentRequestDTO request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request cannot be null");
+        }
+        if (request.getSsn() == null || request.getSsn().trim().isEmpty()) {
+            throw new IllegalArgumentException("SSN cannot be null or empty");
+        }
+        if (request.getPatientName() == null || request.getPatientName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Patient name cannot be null or empty");
+        }
+        if (request.getReasons() == null || request.getReasons().isEmpty()) {
+            throw new IllegalArgumentException("Reasons cannot be null or empty");
+        }
+        if (request.getDates() == null || request.getDates().isEmpty()) {
+            throw new IllegalArgumentException("Dates cannot be null or empty");
+        }
+    }
 
+    /**
+     * Finds or creates a patient.
+     *
+     * @param ssn         The patient's SSN
+     * @param patientName The patient's name
+     * @return The patient entity
+     */
+    private Patient findOrCreatePatient(String ssn, String patientName) {
+        return patientRepository.findBySsn(ssn)
+                .orElseGet(() -> {
+                    logger.info("Creating new patient with SSN: {}", ssn);
+                    return patientRepository.save(new Patient(patientName, ssn));
+                });
+    }
+
+    /**
+     * Creates a list of appointments from the request.
+     *
+     * @param request The appointment request DTO
+     * @param patient The patient entity
+     * @return A list of appointments
+     */
+    private List<Appointment> createAppointments(AppointmentRequestDTO request, Patient patient) {
+        int loopSize = Math.min(request.getReasons().size(), request.getDates().size());
+        return IntStream.range(0, loopSize)
+                .mapToObj(i -> new Appointment(request.getReasons().get(i), request.getDates().get(i).format(DATE_FORMATTER), patient))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -2,11 +2,14 @@ package nl.gerimedica.assignment.objects.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Objects;
 
 @Entity
-@Data
+@Getter
+@Setter
 public class Appointment {
 
     @Id
@@ -14,7 +17,7 @@ public class Appointment {
     public Long id;
     public String reason;
     public String date;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "patient_id")
     public Patient patient;
 
