@@ -10,7 +10,7 @@ import java.util.List;
 public interface HospitalService {
 
     List<AppointmentResponseDTO> createBulkAppointments(AppointmentRequestDTO request);
-    List<Appointment> getAppointmentsByReason(String reasonKeyword);
-    Appointment findLatestAppointmentBySSN(String ssn);
+    List<AppointmentResponseDTO> getAppointmentsByReason(String reasonKeyword);
+    AppointmentResponseDTO findLatestAppointmentBySSN(String ssn);
     void deleteAppointmentsBySSN(String ssn);
 }

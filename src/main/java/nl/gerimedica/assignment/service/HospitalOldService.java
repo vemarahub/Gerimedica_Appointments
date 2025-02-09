@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -106,6 +107,8 @@ public class HospitalOldService {
     }
 
     public Appointment findLatestAppointmentBySSN(String ssn) {
+
+
         Patient patient = findPatientBySSN(ssn);
         if (patient == null || patient.appointments == null || patient.appointments.isEmpty()) {
             return null;

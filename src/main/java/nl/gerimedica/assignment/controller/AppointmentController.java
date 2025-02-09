@@ -118,9 +118,9 @@ public class AppointmentController {
             value = AppointmentConstants.APPOINTMENT_BY_REASON,
             produces = MediaType.APPLICATION_JSON_VALUE
             )
-    public ResponseEntity<List<Appointment>> getAppointmentsByReason( @RequestParam(required = true) String keyword) {
+    public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsByReason( @RequestParam(required = true) String keyword) {
         logger.debug("Fetching appointments for reason containing: {}", keyword);
-        List<Appointment> appointments = hospitalService.getAppointmentsByReason(keyword);
+        List<AppointmentResponseDTO> appointments = hospitalService.getAppointmentsByReason(keyword);
         return ResponseEntity.ok(appointments);
     }
 
@@ -160,7 +160,7 @@ public class AppointmentController {
                     )
             )
     })
-    @PostMapping(AppointmentConstants.DELETE_APPOINTMENTS)
+    @DeleteMapping(AppointmentConstants.DELETE_APPOINTMENTS)
     public ResponseEntity<String> deleteAppointmentsBySSN(@RequestParam(required = true) String ssn) {
         logger.debug("Deleting appointments for SSN: {}", ssn);
         try {
@@ -212,10 +212,10 @@ public class AppointmentController {
     @GetMapping(value=AppointmentConstants.LATEST_APPOINTMENTS,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Appointment> getLatestAppointment(@RequestParam(required = true) String ssn) {
+    public ResponseEntity<AppointmentResponseDTO> getLatestAppointment(@RequestParam(required = true) String ssn) {
         logger.debug("Fetching latest appointment for SSN: {}", ssn);
         try {
-            Appointment latest = hospitalService.findLatestAppointmentBySSN(ssn);
+            AppointmentResponseDTO latest = hospitalService.findLatestAppointmentBySSN(ssn);
             return ResponseEntity.ok(latest);
         } catch (Exception e) {
             logger.error("Failed to fetch latest appointment for SSN: {}", ssn, e);

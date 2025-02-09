@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -74,8 +76,8 @@ public class HospitalServiceImpl implements HospitalService {
             appointmentRepository.saveAll(appointments);
 
             appointments.forEach(appointment ->
-                    logger.info("Created appointment for reason: {} [Date: {}] [Patient SSN: {}]",
-                            appointment.getReason(), appointment.getDate(), appointment.getPatient().getSsn()));
+                    logger.info("Created appointment for reason: {} [Date: {}]",
+                            appointment.getReason(), appointment.getDate()));
 
             HospitalUtils.recordUsage("Bulk create appointments");
             responseDTOs = AppointmentMapper.toDtoList(appointments);
@@ -92,18 +94,59 @@ public class HospitalServiceImpl implements HospitalService {
     }
 
     @Override
-    public List<Appointment> getAppointmentsByReason(String reasonKeyword) {
-        return null;
+    public List<AppointmentResponseDTO> getAppointmentsByReason(String reasonKeyword) {
+        if (reasonKeyword == null || reasonKeyword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Reason keyword cannot be null or empty");
+        }
+
+        List<Appointment> matchedAppointments = appointmentRepository.findAll().stream()
+                .filter(ap -> ap.getReason() != null && ap.getReason().equalsIgnoreCase(reasonKeyword))
+                .collect(Collectors.toList());
+
+        HospitalUtils.recordUsage("Get appointments by reason");
+        List<AppointmentResponseDTO> responseDTOs = AppointmentMapper.toDtoList(matchedAppointments);
+        return responseDTOs;
     }
 
+
     @Override
-    public Appointment findLatestAppointmentBySSN(String ssn) {
-        return null;
+    public AppointmentResponseDTO findLatestAppointmentBySSN(String ssn) {
+        Appointment appointment =  Optional.ofNullable(findPatientBySSN(ssn))
+                .map(patient -> patient.appointments)
+                .filter(appointments -> !appointments.isEmpty())
+                .flatMap(appointments -> appointments.stream()
+                        .max(Comparator.comparing(appt -> appt.date)))
+                .orElse(null);
+
+        AppointmentResponseDTO responseDTO = AppointmentMapper.toDto(appointment);
+
+        return responseDTO;
     }
 
     @Override
     public void deleteAppointmentsBySSN(String ssn) {
+        // Find the patient by SSN
+        Patient patient = findPatientBySSN(ssn);
+        if (patient == null) {
+            logger.warn("No patient found with SSN: {}", ssn);
+            return;
+        }
 
+        // Check if the patient has any appointments
+        List<Appointment> appointments = patient.getAppointments(); // Use a getter instead of direct field access
+        if (appointments == null || appointments.isEmpty()) {
+            logger.info("No appointments found for patient with SSN: {}", ssn);
+            return;
+        }
+
+        // Delete all appointments
+        try {
+            appointmentRepository.deleteAll(appointments);
+            logger.info("Successfully deleted {} appointments for patient with SSN: {}", appointments.size(), ssn);
+        } catch (Exception e) {
+            logger.error("Failed to delete appointments for patient with SSN: {}", ssn, e);
+            throw new RuntimeException("Failed to delete appointments: " + e.getMessage(), e);
+        }
     }
 
     public Patient findPatientBySSN(String ssn) {
